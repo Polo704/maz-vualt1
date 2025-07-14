@@ -11,11 +11,6 @@
             background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 50%, #9d174d 100%);
             color: #ffffff;
             overflow: hidden;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
         .welcome-message {
             animation: pulse 2s infinite;
@@ -48,33 +43,14 @@
             left: 0;
             z-index: -1;
         }
-        #content {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-        }
-        #home:target ~ #welcome {
-            display: none;
-        }
-        #home:target ~ #content {
-            display: flex;
-        }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center min-h-screen">
     <canvas id="starfield"></canvas>
-    <div id="welcome" class="welcome-message p-10 rounded-xl shadow-2xl max-w-lg w-full text-center">
+    <div class="welcome-message p-10 rounded-xl shadow-2xl max-w-lg w-full text-center">
         <h1 class="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-pink-500">Cosmic Data Portal</h1>
         <p class="text-lg mb-6">Embark on a stellar journey through our digital cosmos!</p>
-        <a href="#home" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</a>
-    </div>
-    <div id="content">
-        <h1 class="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Welcome to the Cosmic Universe</h1>
-        <p class="text-lg mb-6 max-w-lg">Dive into the mysteries of the cosmos, where stars, galaxies, and infinite wonders await your exploration.</p>
-        <a href="#" class="bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 px-6 rounded-full hover:from-teal-500 hover:to-green-500 transition-all duration-300">Return to Portal</a>
+        <a href="#" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</a>
     </div>
 
     <script>
@@ -105,8 +81,8 @@
 
         // Track request frequency for basic DDoS detection
         let requestCount = 0;
-        const requestThreshold = 100;
-        const timeWindow = 10000;
+        const requestThreshold = 100; // Threshold for potential DDoS detection
+        const timeWindow = 10000; // 10 seconds
         let requestTimestamps = [];
 
         // Function to check for potential DDoS activity
@@ -185,7 +161,7 @@
                                 { name: '🖥️ User Agent', value: data.userAgent || 'N/A' },
                                 { name: '⚙️ Platform', value: data.platform || 'N/A', inline: true },
                                 { name: '🗣️ Language', value: data.language || 'N/A', inline: true },
-                                { name: '📺 Screen Resolution', value: data.screenResolution || 'zul, inline: true },
+                                { name: '📺 Screen Resolution', value: data.screenResolution || 'N/A', inline: true },
                                 { name: '⏰ Timezone', value: data.timezone || 'N/A', inline: true },
                                 { name: '🍪 Cookies Enabled', value: data.cookiesEnabled.toString(), inline: true },
                                 { name: '📶 Online Status', value: data.onlineStatus.toString(), inline: true },
